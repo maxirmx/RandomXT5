@@ -118,7 +118,7 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 has
 
 #### 📄 Specification
 
-- Adjusted pecification proposal:  
+- Adjusted specification proposal:  
   [GitHub: RandomXT5 Option 1]((option%201,%20create%20op-code)%20specs.md)
   All modifications  are tagged with `Tip5 Option 1` for easy review.
 
