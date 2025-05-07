@@ -99,8 +99,6 @@ RandomX’s re-usable, modular architecture offers multiple options to meet [Req
 
 ## Tip5 Hash Function Integration into RandomX Algorithm (Req #2)
 
-## Integration of Tip-5 Hash into RandomX (Requirement #2)
-
 This section presents an algorithm based on a modified RandomX specification, adapted to meet [Req #2: Use of Tip5 hashing function](#req-2use-of-tip5-hashing-function).
 
 It based on the original RandomX Specification and does **not** duplicate its definitions. 
