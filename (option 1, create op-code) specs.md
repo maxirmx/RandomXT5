@@ -479,8 +479,9 @@ There are 256 opcodes, which are distributed between 29 distinct instructions. E
 |---------|-----------------|----|-|
 |integer |17|120|46.9%|
 |floating point |9|94|36.7%|
-|control |2|26|10.2%|
+|control **_[Tip5 Option 1 changed from 2/26/10.2%]_** |2|25|9.8%|
 |store |1|16|6.2%|
+|tip5 **_[Tip5 Option 1 added]_**|1|1|0.4%|
 ||**29**|**256**|**100%**
 
 All instructions are described below in chapters 5.2 - 5.5.
@@ -664,7 +665,7 @@ There are 2 control instructions.
 |frequency|instruction|dst|src|operation|
 |-|-|-|-|-|
 |1/256|CFROUND|-|R|`fprc = src >>> imm32`
-|25/256|CBRANCH|R|-|`dst = dst + cimm`, conditional jump
+|24/256 **_[Tip5 Option 1 change from 25/256]_** |CBRANCH|R|-|`dst = dst + cimm`, conditional jump
 
 #### 5.4.1 CFROUND
 This instruction calculates a 2-bit value by rotating the source register right by `imm32` bits and taking the 2 least significant bits (the value of the source register is unaffected). The result is stored in the `fprc` register. This changes the rounding mode of all subsequent floating point instructions.
@@ -715,6 +716,21 @@ There is one explicit store instruction for integer values.
 
 #### 5.5.1 ISTORE
 This instruction stores the value of the source integer register to the memory at the address calculated from the value of the destination register. The `src` and `dst` can be the same register.
+
+### 5.6 Tip5 instruction
+Tip5 integration option 1 adds one ip5 calculate and store instruction for integer values.
+
+`[dst]` indicates the destination which is integer register `dst % 8` 
+
+*Table 5.6.1 - Tip5 instruction*
+
+|frequency|instruction|dst|src|operation|
+|-|-|-|-|-|
+|1/256|TIP5|R|R|`[dts] = Tip5(r0...r7)
+
+#### 5.6.1 TIP5
+This instruction calculates Tip5 hash of all integer registers (`r0...r7`) and stores the value of 4 lower bytes to the integer register calculated from the value of the destination register `dst % 8`.
+
 
 ## 6. SuperscalarHash
 
