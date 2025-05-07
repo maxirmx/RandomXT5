@@ -2,7 +2,7 @@
 This proposal addresses the development of a Proof-of-Work (PoW) mining algorithm designed to fulfill the following specific criteria:
 #### Req #1.	GPU/ASIC resistance
 The algorithm must be inherently resistant to parallelization, effectively discouraging mining performance advantages gained through GPU or ASIC hardware acceleration.
-#### Req #2.	Use of Tip5 hashing fucntion
+#### Req #2.	Use of Tip5 hashing function
 The algorithm must use the Tip5 hashing standard, preserving its cryptographic integrity and security strength.
 #### Req #3.	CPU optimization
 The algorithm should exhibit optimized performance on standard CPU architectures, aiming to validate a single hash operation within approximately 200 microseconds on high-end contemporary CPU hardware.
