@@ -141,7 +141,28 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 has
 
 ---
 
-## Comparison of Tip-5 Integration Options in RandomX
+### 2. Use Tip-5 for Final Digest (`Hash256` Replacement)
+
+In standard RandomX, the final digest is produced using the `Hash256` function, which is internally a Blake2b variant with a 256-bit output.
+
+This can be seamlessly replaced with a single Tip-5 sponge squeeze, yielding a **320-bit** digest instead of 256 bits.
+
+#### 📄 Specification
+
+- Full spec (Option 1 branch):  
+  [GitHub: RandomXT5 Option 1]((option%201,%20create%20op-code)%20specs.md)
+  All modifications  are tagged with `Tip5 Option 1` for easy review.
+
+#### ⚙️ Design Rationale
+
+- **Straightforward substitution** — no structural changes to the VM or instruction set.
+- **Minimal performance impact** — used only at the final step of hashing.
+
+If minmal use of Tip5 satisfies project objectives, this is the **recommended integration**.
+
+---
+
+### Comparison of Tip-5 Integration Options in RandomX
 
 | Option | Description | Output Size | Collision Resistance | Security Impact | Performance Impact | Notes |
 |--------|-------------|-------------|-----------------------|------------------|--------------------|-------|
