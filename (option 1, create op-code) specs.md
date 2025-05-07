@@ -726,7 +726,7 @@ Tip5 integration option 1 adds one ip5 calculate and store instruction for integ
 
 |frequency|instruction|dst|src|operation|
 |-|-|-|-|-|
-|1/256|TIP5|R|R|`[dts] = Tip5(r0...r7)
+|1/256|TIP5|R|R|`[dst] = Tip5(r0...r7)
 
 #### 5.6.1 TIP5
 This instruction calculates Tip5 hash of all integer registers (`r0...r7`) and stores the value of 4 lower bytes to the integer register calculated from the value of the destination register `dst % 8`.
