@@ -1,4 +1,4 @@
-Task Description and Requirements
+==Task Description and Requirements==
 This proposal addresses the development of a Proof-of-Work (PoW) mining algorithm designed to fulfill the following specific criteria:
 1.	GPU/ASIC RESISTANCE
 The algorithm must be inherently resistant to parallelization, effectively discouraging mining performance advantages gained through GPU or ASIC hardware acceleration.
