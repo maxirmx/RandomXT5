@@ -59,7 +59,7 @@ In effect, RandomX fulfils the CryptoNote ideal of ASIC resistance while simulta
 #### 1.	Strong GPU/ASIC Resistance
 RandomX remains the only production-grade, general-purpose PoW algorithm that demonstrably thwarts both ASICs and high-end GPUs, fully satisfying **Req #1: GPU/ASIC resistance**.
 #### 2.	High Performance on CPU 
-Its high-throughput virtual machine verifies a single hash in roughly 200 ms on modern, high-end CPUs isalready within (or very close to) the target range specified in **Req #3: CPU Optimization**.
+Its high-throughput virtual machine verifies a single hash in roughly 200 ms on modern, high-end CPUs is already within (or very close to) the target range specified in **Req #3: CPU Optimization**.
 #### 3.	Re-usability Across Blockchains
 Designed as a drop-in mining engine, RandomX ships with configuration options and guidance for integrating the VM into new blockchains without code-level changes to its core logic.
 Since its release, RandomX has been adopted (or adapted) by numerous other blockchain projects seeking ASIC-resistant proof-of-work. Examples include:
