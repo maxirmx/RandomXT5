@@ -149,7 +149,7 @@ This can be seamlessly replaced with a single Tip-5 sponge squeeze, yielding a *
 
 #### 📄 Specification
 
-- Adjusted pecification proposal:  
+- Adjusted specification proposal:  
   [GitHub: RandomXT5 Option 1]((option%202%2C%20replace%20final%20digest)%20specs.md))
   All modifications  are tagged with `Tip5 Option 2` for easy review.
 
