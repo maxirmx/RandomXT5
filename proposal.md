@@ -5,7 +5,7 @@ The algorithm must be inherently resistant to parallelization, effectively disco
 #### Req #2.	Use of Tip5 hashing function
 The algorithm must use the Tip5 hashing standard, preserving its cryptographic integrity and security strength.
 #### Req #3.	CPU optimization
-The algorithm should exhibit optimized performance on standard CPU architectures, aiming to validate a single hash operation within 200 milliseconds on high-end contemporary CPU hardware.
+The algorithm should exhibit optimized performance on standard CPU architectures, aiming to validate a single hash operation within a maximum of 200 milliseconds on high-end contemporary CPU hardware.
 
 Meeting mandatory requirements (1) and (2) is essential. Achieving requirement (3) is highly desirable and will significantly enhance practical applicability.
 
