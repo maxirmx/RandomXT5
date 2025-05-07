@@ -135,13 +135,11 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 has
   It is designed to occur **infrequently** in generated programs to minimize performance overhead.
 
 - **Performance Considerations:**  
-  While some overhead is expected even with rare calls, RandomX significantly outperforms its target performance envelope.  
-  As a result, this additional cost is likely acceptable.
+  While some overhead is expected even with rare calls, RandomX significantly outperforms its performance target.  
+  As a result, this additional cost is likely acceptable. It estimated that it will increase the average verification time from ~15 ms to ~20 ms still well below the target of 200 ms.
 
 - **Shared Optimizations:**  
   General optimization strategies applicable to all Tip-5 integration methods are discussed in a later section.
 
 ---
 
-
-https://github.com/maxirmx/RandomXT5/blob/option-1/(option%201,%20create%20op-code)%20specs.md#56-tip5-instruction
