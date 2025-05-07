@@ -108,7 +108,7 @@ It based on the original RandomX Specification and does **not** duplicate its de
 ## Integration Strategies
 
 There are multiple, independent approaches to integrating the Tip-5 hash function into RandomX.  
-These strategies can be implemented separately or in combination. Adjusted specification proposals are created for each integration option and are presenetd in separate documents.
+These strategies can be implemented separately or in combination. Adjusted specification proposals are created for each integration option and are presented in separate documents.
 
 ---
 
