@@ -119,8 +119,7 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 has
 #### 📄 Specification
 
 - Adjusted specification proposal:  
-  [GitHub: RandomXT5 Option 1]((option%201,%20create%20op-code)%20specs.md)
-  All modifications  are tagged with `Tip5 Option 1` for easy review.
+  [GitHub: RandomXT5 Option 1]((option%201,%20create%20op-code)%20specs.md), all modifications  are tagged with `Tip5 Option 1` for easy review.
 
 - The core change is described in Opcode details — Section 5.6.1:  
   [§ 5.6.1: Tip5 Instruction]((option%201,%20create%20op-code)%20specs.md#56-tip5-instruction)
@@ -150,8 +149,7 @@ This can be seamlessly replaced with a single Tip-5 sponge squeeze, yielding a *
 #### 📄 Specification
 
 - Adjusted specification proposal:  
-  [GitHub: RandomXT5 Option 2]((option%202%2C%20replace%20final%20digest)%20specs.md)
-  All modifications  are tagged with `Tip5 Option 2` for easy review.
+  [GitHub: RandomXT5 Option 2]((option%202%2C%20replace%20final%20digest)%20specs.md), all modifications  are tagged with `Tip5 Option 2` for easy review.
 
 #### ⚙️ Design Rationale
 
