@@ -9,6 +9,8 @@ The algorithm should exhibit optimized performance on standard CPU architectures
 
 Meeting mandatory requirements (1) and (2) is essential. Achieving requirement (3) is highly desirable and will significantly enhance practical applicability.
 
+---
+
 ## Overview of Known Technologies
 ### Academic Research
 The CryptoNote Whitepaper offered the first systematic treatment of ASIC-resistant mining, proposing PoW functions that hinge on memory hardness and high memory-bandwidth demands. 
@@ -23,6 +25,8 @@ Numerous variations on this theme have since appeared in academic literature (th
 | 2019	| [Evaluating Memory‑Hard PoW Algorithms on Three Processors](https://arxiv.org/abs/1903.02501), Feng et al. |  Benchmarks memory‑hard schemes on CPU, GPU, Xeon‑Phi. Finds GPUs still dominate once tuned.| 
 | 2020	| [Itsuku: a Memory‑Hardened PoW Scheme](https://itsuku.io/paper.pdf), Albertini & Berkovits | Tweaks MTP to close known gaps. Illustrates the arms‑race nature of memory‑hard PoW. | 
 | 2019	| [New Anti‑ASIC Consensus Algorithm with Emphasis on Matrix Computation](https://arxiv.org/abs/1905.04565), Seele | Proposes matrix‑based bandwidth‑hard PoW.	Demonstrates practical attempt to use high memory bandwidth. | 
+
+---
 
 ### Memory/Bandwidth Hardness Algorithms
 
@@ -39,6 +43,8 @@ Several production algorithms inspired by memory- and bandwidth-hard principles 
 
 Yet experience shows that memory-hard techniques on their own provide only temporary ASIC- and GPU-resistance: with sufficient R &D investment, vendors can still design specialized hardware that amortizes the added memory cost and regains a decisive efficiency edge.
 
+---
+
 ### RandomX 
 To overcome the limitations of pure memory- or bandwidth-hard PoW schemes, the [RandomX project](https://github.com/tevador/RandomX/blob/master/doc/design.md)  adopts a more systematic strategy. A PoW algorithm can truly overcome the advantage of GPUs and ASICs only if it binds the work to the architectural traits of commodity CPUs.
 
@@ -54,15 +60,21 @@ The result:
 - GPU throughput is neutralized: serial, cache-intensive workloads negate the massive parallelism that gives GPUs their edge.
 In effect, RandomX fulfils the CryptoNote ideal of ASIC resistance while simultaneously charting a practical path toward robust GPU resistance
 
+---
+
 ## RandomX — Assessment Against Project Requirements 
 
 #### 1.	Strong GPU/ASIC Resistance
 RandomX remains the only production-grade, general-purpose PoW algorithm that demonstrably thwarts both ASICs and high-end GPUs, fully satisfying [Req #1: GPU/ASIC resistance](#req-1gpuasic-resistance).
 
+---
+
 #### 2.	High Performance on CPU 
 Its high-throughput virtual machine verifies a single hash in average of 15 ms on modern, high-end CPUs is much better then the target range specified in [Req #3: CPU Optimization](#req-3cpu-optimization).
 The following figure shows the distribution of times to calculate 1 hash result using the light mode. 
 ![image](https://github.com/user-attachments/assets/0130b144-f503-48d3-ba61-126c4d082d96)
+
+---
 
 #### 3.	Re-usability Across Blockchains
 Designed as a drop-in mining engine, RandomX ships with configuration options and guidance for integrating the VM into new blockchains without code-level changes to its core logic.
@@ -73,14 +85,63 @@ Since its release, RandomX has been adopted (or adapted) by numerous other block
   
 This proves that RandomX VM can be adapted for different blockchain solutions 
 
+---
+
 #### 4.	Modular Extensibility
 RandomX’s implementation and design are highly modular, which has allowed developers to modify or extend it with relative ease. Several aspects of the project’s structure support this flexibility:
 -	Clean Library/API Architecture: The official RandomX codebase builds as a reusable library with a straightforward C API (randomx.h). This ease of integration is evidenced by the many independent projects (from Arweave to Epic Cash) that incorporated RandomX by linking to or forking the library.
 -	Configurable Parameters and Modes: As noted, RandomX includes dozens of parameters that are not hard-coded but defined in configuration (dataset size, cache size, instruction count, etc.). The algorithm was intentionally built to allow tuning these constants, which made it possible for coins to create variants like RandomWOW or RandomXL by changing a few parameters. 
 -	Extensible Virtual Machine (Opcode Design): RandomX uses a virtual machine that executes pseudorandom programs. This means the instruction decoder is robust to arbitrary byte sequences – a property that simplifies adding or adjusting opcodes. We can introduce new VM instructions without breaking the bytecode format. 
 
-RandomX’s re-usable, modular architecture offers multiple options to meet [Req #2: Use of Tip5 hashing fucntion](#req-2use-of-tip5-hashing-function).
+RandomX’s re-usable, modular architecture offers multiple options to meet [Req #2: Use of Tip5 hashing function](#req-2use-of-tip5-hashing-function).
 
-## Tip5 Hash Function Integration into RandomX Algorithm
+---
+
+## Tip5 Hash Function Integration into RandomX Algorithm (Req #2)
+
+## Integration of Tip-5 Hash into RandomX (Requirement #2)
+
+This section presents an algorithm based on a modified RandomX specification, adapted to meet [Req #2: Use of Tip5 hashing function](#req-2use-of-tip5-hashing-function).
+
+It based on the original RandomX Specification and does **not** duplicate its definitions. 
+
+---
+
+## Integration Strategies
+
+There are multiple, independent approaches to integrating the Tip-5 hash function into RandomX.  
+These strategies can be implemented separately or in combination. Adjusted specification proposals are created for each integration option and are presenetd in separate documents.
+
+---
+
+### 1. Add a New VM Opcode for Tip-5
+
+A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 hash algorithm.
+
+#### 📄 Specification
+
+- Full spec (Option 1 branch):  
+  [GitHub: RandomXT5 Option 1]((option%201,%20create%20op-code)%20specs.md)
+  All modifications  are tagged with `Tip5 Option 1` for easy review.
+
+- The core change is described in Opcode details — Section 5.6.1:  
+  [§ 5.6.1: Tip5 Instruction]((option%201,%20create%20op-code)%20specs.md#56-tip5-instruction)
+
+
+#### ⚙️ Design Rationale
+
+- **Infrequent Use:**  
+  The new opcode replaces a primitive, single-cycle operation with a more complex Tip-5 call.  
+  It is designed to occur **infrequently** in generated programs to minimize performance overhead.
+
+- **Performance Considerations:**  
+  While some overhead is expected even with rare calls, RandomX significantly outperforms its target performance envelope.  
+  As a result, this additional cost is likely acceptable.
+
+- **Shared Optimizations:**  
+  General optimization strategies applicable to all Tip-5 integration methods are discussed in a later section.
+
+---
+
 
 https://github.com/maxirmx/RandomXT5/blob/option-1/(option%201,%20create%20op-code)%20specs.md#56-tip5-instruction
