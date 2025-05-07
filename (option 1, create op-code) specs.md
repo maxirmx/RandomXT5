@@ -1,4 +1,4 @@
-# Adjusted RandomX Specification Proposal (Option 1 - Create Tip5 Op-Code)
+# RandomXT5 Specification Proposal (Option 1 - Create Tip5 Op-Code)
 
 RandomX is a proof of work (PoW) algorithm which was designed to close the gap between general-purpose CPUs and specialized hardware. The core of the algorithm is a simulation of a virtual CPU.
 

@@ -1,4 +1,4 @@
-# RandomX
+# RandomXT5 Specification Proposal (Option 2 - Replace Final Digest)
 
 RandomX is a proof of work (PoW) algorithm which was designed to close the gap between general-purpose CPUs and specialized hardware. The core of the algorithm is a simulation of a virtual CPU.
 
@@ -17,7 +17,10 @@ RandomX is a proof of work (PoW) algorithm which was designed to close the gap b
 
 ### 1.1 General definitions
 
-**Hash256** and **Hash512** refer to the [Blake2b](https://blake2.net/blake2_20130129.pdf) hashing function with a 256-bit and 512-bit output size, respectively.
+**Hash320** refers to the Tip5 hashing function with 320-bit output size.  **_[Tip5 Option 2 addition]_**
+
+**Hash256** and **Hash512** refer to the [Blake2b](https://blake2.net/blake2_20130129.pdf) hashing function with a 256-bit and 512-bit output size, respectively. 
+**_[For Tip5 Option 2 Hash256 function is not used. The reference is kept to explain xkey0, xkey1 generation]_**
 
 **Floating point format** refers to the [IEEE-754 double precision floating point format](https://en.wikipedia.org/wiki/Double-precision_floating-point_format) with a sign bit, 11-bit exponent and 52-bit fraction.
 
@@ -83,7 +86,7 @@ The RandomX algorithm accepts two input values:
 * String `K` with a size of 0-60 bytes (key)
 * String `H` of arbitrary length (the value to be hashed)
 
-and outputs a 256-bit result `R`.
+and outputs a 320-bit result `R`. **_[Tip5 Option 2 changed from 256-bit result]_**
 
 The algorithm consists of the following steps:
 
@@ -100,7 +103,7 @@ The algorithm consists of the following steps:
 1. Steps 7-10 are performed a total of `RANDOMX_PROGRAM_COUNT` times. The last iteration skips steps 9 and 10.
 1. Scratchpad fingerprint is calculated as `A = AesHash1R(Scratchpad)`.
 1. Bytes 192-255 of the Register File are set to the value of `A`.
-1. Result is calculated as `R = Hash256(RegisterFile)`.
+1. Result is calculated as `R = Hash320(RegisterFile)`.  **_[Tip5 Option 2 changed from R = Hash256(RegisterFile)]_**
 
 The input of the `Hash512` function in step 9 is the following 256 bytes:
 ```
@@ -115,7 +118,7 @@ The input of the `Hash512` function in step 9 is the following 256 bytes:
  +---------------------------------+
 ```
 
-The input of the `Hash256` function in step 14 is the following 256 bytes:
+The input of the `Hash320` function in step 14 is the following 256 bytes:  **_[Tip5 Option 2 changed from the input of the Hash256 function]_**
 ```
  +---------------------------------+
  |         registers r0-r7         | (64 bytes)
@@ -250,8 +253,9 @@ xkey1 = d1 63 b2 61 3c e0 f4 51 c6 43 10 ee 9b f9 18 ed
 
 The extra keys were generated as:
 ```
-xkey0, xkey1 = Hash256("RandomX AesHash1R xkeys")
+xkey0, xkey1 = Hash256("RandomX AesHash1R xkeys") 
 ```
+
 
 ```
 state0 (16 B)    state1 (16 B)    state2 (16 B)    state3 (16 B)
