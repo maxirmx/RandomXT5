@@ -158,7 +158,7 @@ This can be seamlessly replaced with a single Tip-5 sponge squeeze, yielding a *
 - **Straightforward substitution** — no structural changes to the VM or instruction set.
 - **Minimal performance impact** — used only at the final step of hashing.
 
-If minmal use of Tip5 satisfies project objectives, this is the **recommended integration**.
+If minimal use of Tip5 satisfies project objectives, this is the **recommended integration**.
 
 ---
 
