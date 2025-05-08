@@ -135,9 +135,7 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip5 hash
 - **Performance Considerations:**  
   While some overhead is expected even with rare calls, RandomX significantly outperforms its performance target.  
   As a result, this additional cost is likely acceptable. It estimated that it will increase the average verification time from ~15 ms to ~20 ms still well below the target of 200 ms.
-
-- **Shared Optimizations:**  
-  General optimization strategies applicable to all Tip-5 integration methods are discussed in a later section.
+  Thus [Tip5 optimization](tip5_avx2_sse2_optimization.md) is optional. 
 
 ---
 
@@ -229,15 +227,12 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 - **Quantum caveat**:   
   Under Grover’s algorithm, the effective collision resistance of Tip-5 drops to **~80 bits**, which is below future-safe levels. A **quantum-capable attacker** could eventually compromise a Tip5-based PoW system.
 
-- **Forward-looking alternative**:  
-  For stronger or quantum-resilient hashing, a higher-capacity instantiation—such as **Tip8**, analogous to **Tip4** and **Tip4′** instantiations described in the [Two additional instantiations from the Tip5 hash function construction](https://toposware.com/paper_tip5.pdf), Robin Salen would be required to match or exceed Blake2b’s security properties.
-
----
-
-✅ In summary: Tip5 is cryptographically secure **for PoW use today**, but it does **not provide full Blake2b-equivalent strength** and is **not suitable for long-term quantum-resilient designs without further extensions**.
-
 ---
 #### 🛠️ Flavor B Implementation
+
+For matching or exceeding Blake2b’s security properties or quantum-resilient hashing, a higher-capacity instantiation—such as **Tip8** is required.
+The proposal below follows **Tip4** and **Tip4′** instantiations described in the [Two additional instantiations from the Tip5 hash function construction](https://toposware.com/paper_tip5.pdf) article by Robin Salen.
+
 
 **Algorithm Instantiation Parameters**
 
@@ -282,15 +277,11 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 - **Performance**:
   Tip5/Tip8 will sit in the same performance-critical spot that Blake2b occupies today. RandomX’s designers chose BLAKE2b because
   highly-tuned AVX2/SSE2 code can compress the VM state in a few microseconds; a scalar fall-back would be tens of percent slower
-  and potentially double hash verification time.  Tip5/Tip8 implementation both for Flavour A and FlavourB needs to exploit the CPU’s
-  AVX2/SSE2 units just as Blake2b does.
+  and potentially double hash verification time.  Tip5/Tip8 implementation both for Flavour A and FlavourB requires implementation
+  of [Tip5 optimization](tip5_avx2_sse2_optimization.md).
 
 - **Use-case**:
   Suitable for replacing `Hash512` that generates random workload generation
-
----
-
-### Tip5/Tip8 optimzation for AVX2/SSE2
 
 ---
 
