@@ -110,9 +110,9 @@ These strategies can be implemented separately or in combination. Adjusted speci
 
 ---
 
-### Option 1. Add a New VM Opcode for Tip-5
+### Option 1. Add a New VM Opcode for Tip5
 
-A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 hash algorithm.
+A new opcode can be added to the RandomX virtual machine to invoke the Tip5 hash algorithm.
 
 #### 📄 Specification
 
@@ -123,10 +123,10 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 has
   [§ 5.6.1: Tip5 Instruction]((option%201,%20create%20op-code)%20specs.md#56-tip5-instruction)
 
 
-#### ⚙️ Design Rationale
+#### ⚙️ Design Notes
 
 - **Infrequent Use:**  
-  The new opcode replaces a primitive, single-cycle operation with a more complex Tip-5 call.  
+  The new opcode replaces a primitive, single-cycle operation with a more complex Tip5 call.  
   It is designed to occur **infrequently** in generated programs to minimize performance overhead.
 
 - **Performance Considerations:**  
@@ -138,21 +138,24 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 has
 
 ---
 
-### Option 2. Use Tip-5 for Final Digest (`Hash256` Replacement)
+### Option 2. Use Tip5 for Final Digest (`Hash256` Replacement)
 
 In standard RandomX, the final digest is produced using the `Hash256` function, which is internally a Blake2b variant with a 256-bit output.
 
-This can be seamlessly replaced with a single Tip-5 sponge squeeze, yielding a **320-bit** digest instead of 256 bits.
+This can be seamlessly replaced with a single Tip5 sponge squeeze, yielding a **320-bit** digest instead of 256 bits.
 
 #### 📄 Specification
 
 - Adjusted specification proposal:  
   [GitHub: RandomXT5 Option 2]((option%202%2C%20replace%20final%20digest)%20specs.md), all modifications  are tagged with `Tip5 Option 2` for easy review.
 
-#### ⚙️ Design Rationale
+#### ⚙️ Design Notes and Rationale
 
-- **Straightforward substitution** — no structural changes to the VM or instruction set.
-- **Minimal performance impact** — used only at the final step of hashing.
+- **Straightforward substitution:**   
+  No structural changes to the VM or instruction set.
+
+- **Minimal performance impact:**   
+  Used only at the final step of hashing.
 
 If minimal use of Tip5 satisfies project objectives, this is the **recommended integration**.
 
@@ -186,7 +189,7 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
 
 #### 🛠️ Implementation Steps
 
-1. **Keep the 10-limb Tip-5 state** unchanged (`rate = 5`, `capacity = 5`)
+1. **Keep the 10-limb Tip5 state** unchanged (`rate = 5`, `capacity = 5`)
 2. **Squeeze twice**:
     ```cpp
     permute(state);          // already done
@@ -198,8 +201,6 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
     *(Alternatively, output 4 limbs to generate a full 512 bits exactly)*
 
 3. **Package** the combined 64-byte result as the new digest.
-
-📌 The second permutation adds only ~0.1 µs in practice — a negligible cost in the RandomX context.
 
 ---
 
@@ -213,17 +214,17 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
   \mathcal{O}(q^2 / 2^c), \quad \text{with } c = 320 \Rightarrow \text{collision bound } \approx 2^{160}
   \]
 
-- **Multiple squeezes remain safe**:  
+- **Multiple squeezes remain safe**:   
   Each additional squeeze is preceded by a full permutation of the internal state, ensuring the **capacity section remains hidden**. This maintains **indifferentiability from a random oracle**, as required for cryptographic soundness.
 
-- **No added strength from longer digests**:  
+- **No added strength from longer digests**:   
   While the output may be extended to 512 bits (via two squeezes), the **security is still bounded by the capacity**, not the digest size. Revealing more than `c` bits never increases the collision resistance beyond \( c / 2 = 160 \) bits.
 
-- **Not a full replacement for Blake2b**:  
+- **Not a full replacement for Blake2b**:   
   Tip-5 has a smaller internal state (**640 bits**) compared to Blake2b’s (**1024 bits**). This means it does **not match** Blake2b’s full 256-bit collision resistance or 512-bit preimage strength.  
   Therefore, **Tip-5 is not a drop-in replacement** for Blake2b in high-security applications.
 
-- **Quantum caveat**:  
+- **Quantum caveat**:   
   Under Grover’s algorithm, the effective collision resistance of Tip-5 drops to **~80 bits**, which is below future-safe levels. A **quantum-capable attacker** could eventually compromise a Tip5-based PoW system.
 
 - **Forward-looking alternative**:  
@@ -242,14 +243,19 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
 
 ---
 
-#### ⚙️ Design Rationale
+#### ⚙️ Design Notes and Rationale
 
-- **Output**: 512-bit digest from two squeezes  
-- **Security**: Two variants can be implemented.
-   - ** Variant A: double squeeze ** , offering fast result and 160-bit resistance (lower than Blake2b)
-   - ** Variant B: new instantiation ** , offering 256-bit resistance (en par with Blake2b) but requiring generation of new MDS matrix, statistical and security analysis with the result that can not be fully committed
-- **Performance**: Minimal overhead (~0.1 µs for extra permutation)  
-- **Use-case**: Suitable for replacing intermediate `Hash512` logic where Tip5 is desired
+- **Output**:
+  512-bit digest from two squeezes  
+
+- **Security** :
+  Cryptographically secure **for PoW use today**, but it does **not provide full Blake2b-equivalent strength** and is **not suitable for long-term quantum-resilient designs without further extensions**
+
+- **Performance** :
+- Minimal overhead (~0.1 µs for extra permutation)  
+
+- **Use-case**:
+  Suitable for replacing `Hash512` that generates random workload generation
 
 This approach offers full cryptographic soundness and a smooth integration path—ideal for aligning with sponge-based primitives in a post-Blake2b context.
 
