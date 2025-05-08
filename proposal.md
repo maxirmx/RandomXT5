@@ -14,7 +14,7 @@ Meeting mandatory requirements (1) and (2) is essential. Achieving requirement (
 
 ---
 
-## Overview of Known Technologies
+## Overview of Known Technologies for GPU/ASIC Resistance
 ### Academic Research
 The CryptoNote Whitepaper offered the first systematic treatment of ASIC-resistant mining, proposing PoW functions that hinge on memory hardness and high memory-bandwidth demands. 
 Numerous variations on this theme have since appeared in academic literature (the list below is not intended to be exhaustive).
