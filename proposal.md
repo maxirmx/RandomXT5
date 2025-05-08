@@ -289,24 +289,11 @@ The proposal below follows **Tip4** and **Tip4′** instantiations described in 
 
 ### Comparison of Tip5 Integration Options in RandomX
 
-| Option | Description | Output Size | Collision Resistance | Security Impact | Performance Impact | Notes |
-|--------|-------------|-------------|-----------------------|------------------|--------------------|-------|
-| **1. VM Opcode** | Add `tip5` as a new RandomX VM opcode | Variable (depends on use) | Up to 160-bit | ✅ Secure if opcode is rare and deterministic | ⚠️ Moderate — more costly than primitive ops | Controlled by opcode frequency; enables VM programmability |
-| **2. Replace `Hash256`** | Swap RandomX's `Hash256` (Blake2b-256) with 1 Tip-5 squeeze | 320-bit | 160-bit | ✅ Secure — capacity-driven, ≥128-bit safe | ⚪️ Neutral to Slight — end-of-algorithm only | Increases output size by 64 bits; no runtime slowdowns |
-| **3. Replace `Hash512`** | Replace Blake2b-512 with 2 Tip-5 squeezes (permute + squeeze) | 512-bit | 160-bit | ✅ Secure — same sponge rules apply | ⚠️ Slight — extra permutation adds ~0.1 μs | Still below collision threshold; safe for PoW use |
-
-✅ = Cryptographically sound  
-⚠️ = Requires tuning or hardened implementation  
-⚪️ = Minimal or context-dependent effect
-
----
-
-### Summary
-
-- **Security**: All options preserve or improve the collision resistance compared to the original Blake2b-based design.
-- **Performance**: Option 1 (VM opcode) introduces the highest runtime cost but provides the most flexibility. Options 2 and 3 offer cryptographic upgrades with minimal impact, particularly suitable for final hashing.
-- **Use-case**:  
-  - Use **Option 1** for enhanced entropy or novel VM logic.  
-  - Use **Options 2/3** for drop-in cryptographic upgrades.
+| Option                            | Security Impact | Requires Tip5 optimization | Implementation effort | 
+|-----------------------------------|-----------------|----------------------------|-----------------------|
+| **1. Create op-code**             |  .              | .                          | .                     |
+| **2. Replace final digest**       |  .              | .                          | .                     |
+| **3. Replace `Hash512` Flavor A** |  .              | .                          | .                     |
+| **4. Replace `Hash512` Flavor B** |  .              | .                          | .                     |
 
 
