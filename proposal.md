@@ -274,7 +274,7 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 
 #### ⚙️ Design Notes and Rationale
 
-- **Tip5 replacement of Blacke2b hash**:
+- **Tip5 replacement of Blake2b hash**:
   512-bit digest either from two squeezes or from 16 limbs algorithm instantiation
 
 - **Performance**:
