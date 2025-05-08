@@ -247,7 +247,7 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
 - **Output**: 512-bit digest from two squeezes  
 - **Security**: Two variants can be implemented.
    - ** Variant A: double squeeze ** , offering fast result and 160-bit resistance (lower than Blake2b)
-   - ** Variant B: new instantiation ** , offering 256-bit resistance (en par with Blake2b) but reuquiring generation of new MDS matrix, statistical and security  analysys with the result that can not be fully commited
+   - ** Variant B: new instantiation ** , offering 256-bit resistance (en par with Blake2b) but requiring generation of new MDS matrix, statistical and security analysis with the result that can not be fully committed
 - **Performance**: Minimal overhead (~0.1 µs for extra permutation)  
 - **Use-case**: Suitable for replacing intermediate `Hash512` logic where Tip5 is desired
 
