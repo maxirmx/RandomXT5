@@ -261,7 +261,7 @@ The proposal below follows **Tip4** and **Tip4′** instantiations described in 
 - **Performance**:
   Tip5/Tip8 will sit in the same performance-critical spot that Blake2b occupies today. RandomX’s designers chose BLAKE2b because
   highly-tuned AVX2/SSE2 code can compress the VM state in a few microseconds; a scalar fall-back would be tens of percent slower
-  and potentially double hash verification time.  Tip5/Tip8 implementation both for Flavour A and FlavourB requires implementation
+  and potentially double hash verification time.  Tip5/Tip8 implementation both for Flavor A and Flavor B requires implementation
   of [Tip5 optimization](tip5_avx2_sse2_optimization.md).
 
 - **Use-case**:
