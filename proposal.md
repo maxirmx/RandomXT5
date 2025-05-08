@@ -1,3 +1,6 @@
+# RandomXT5
+## PoW Tip5 Based Mining Algorithm Development Technical Proposal
+
 ## Task Description and Requirements
 This proposal addresses the development of a Proof-of-Work (PoW) mining algorithm designed to fulfill the following specific criteria:
 #### Req #1.	GPU/ASIC resistance
