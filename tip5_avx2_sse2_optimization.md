@@ -1,14 +1,15 @@
-### Tip5/Tip8 optimization for AVX2/SSE2
+## Tip5/Tip8 optimization for AVX2/SSE2
 
-#### Goals and design constraints
-* **Throughput parity with BLAKE2b** – the replacement for `Hash512` must not widen RandomX’s critical path.  
-* **Constant-time & side‑channel hard** – no data‑dependent branches or table look‑ups.  
-* **Single source tree** – scalar, SSE2 and AVX2 paths selected at compile‑time (`#ifdef __AVX2__`, `__SSE2__`).  
-* **No AVX‑512 dependency** – keeps the design deployable on commodity CPUs (Haswell‑era and newer).
+### Goals and design constraints
+* Use [C++ Tip5](https://github.com/maxirmx/tip5) implementation as a baseline
+* Throughput parity with BLAKE2b – the replacement for `Hash512` must not widen RandomX’s critical path.  
+* Constant-time & side‑channel hard – no data‑dependent branches or table look‑ups.  
+* Single source tree – scalar, SSE2 and AVX2 paths selected at compile‑time (`#ifdef __AVX2__`, `__SSE2__`).  
+* No AVX‑512 dependency – keeps the design deployable on commodity CPUs (Haswell‑era and newer).
 
 ---
 
-#### 1. SIMD strategy
+### 1. SIMD strategy
 AVX2 has no 64‑bit integer multiply, so we adopt the **state‑parallel** scheme used by BLAKE2bp/BLAKE3: each 256‑bit register holds the *same* limb across **four independent Tip5/Tip8 permutations**.
 
 ```
@@ -25,7 +26,7 @@ The “batch of 4” hides scalar‑multiply latency while still exploiting wide
 
 ---
 
-#### 2. Field arithmetic in **Fₚ**, p = 2^64 − 2^32 + 1
+### 2. Field arithmetic in **Fₚ**, p = 2^64 − 2^32 + 1
 * **Addition / subtraction:** `VPADDQ` / `VPSUBQ`, followed by a mask‑add of *p* to keep results `< p` (branch‑free).  
 * **Multiplication:** form the 128‑bit product with `_mulx_u64` (or inline `MULQ`).
 
@@ -44,7 +45,7 @@ The “batch of 4” hides scalar‑multiply latency while still exploiting wide
 
 ---
 
-#### 3. S‑box (x^3) and cube‑root layer
+### 3. S‑box (x^3) and cube‑root layer
 Tip5/Tip8 apply x^3 per limb:
 
 ```text
@@ -58,7 +59,7 @@ Unrolling the inner two‑round loop (still I‑cache friendly) removes ~15 % 
 
 ---
 
-#### 4. MDS matrix (linear layer)
+### 4. MDS matrix (linear layer)
 The 10×10 (Tip5) or 16×16 (Tip8) MDS matrix is sparse: each output limb is a *small* affine combination of inputs.  Encode with compile‑time constants:
 
 ```cpp
@@ -71,7 +72,7 @@ Coefficients 2–5 become shift‑and‑add sequences inside 64‑bit lanes; o
 
 ---
 
-#### 5. Round‑constant injection
+### 5. Round‑constant injection
 Load all round constants once into YMM registers:
 
 ```text
@@ -84,7 +85,7 @@ Then `VPADDQ state[i], ymm_rc[i]` each round – ~6 % fewer load stalls (Zen�
 
 ---
 
-#### 6. Code organisation
+### 6. Code organisation
 ```
 tip5/
  ├─ tip5_scalar.cpp        // reference, always built
@@ -99,7 +100,7 @@ tip5/
 
 ---
 
-#### 7. Constant‑time & micro‑architectural safety
+### 7. Constant‑time & micro‑architectural safety
 * No table look‑ups ⇒ immune to D‑cache attacks.  
 * Branches depend only on compile‑time flags, never on secrets.  
 * Same instruction mix for every message length after padding.
@@ -108,38 +109,23 @@ Matches RandomX’s threat model and Kudelski audit guidance.
 
 ---
 
-#### 8. Expected performance  
+### 8. Expected performance  
 *Zen 4, 4.2 GHz, GCC 14, `‑O3 ‑march=native`*
 
 | backend | states/call | cycles/perm | MiB/s (`hash_pair`) |
 |---------|-------------|-------------|---------------------|
-| scalar  | 1           | 3280 ± 20   | 290 |
-| SSE2    | 2           | 1690 ± 15   | 560 |
-| **AVX2**| **4**       | **840 ± 8** | **1080** |
+| scalar  | 1           | 3280 ± 20   | 290  |
+| SSE2    | 2           | 1690 ± 15   | 560  |
+| AVX2    | 4           | 840 ± 8     | 1080 |
 
 AVX2 is ~3.8× faster than scalar and within 5 % of libBLAKE2b’s AVX2 code on the same box.  
-Even padding‑heavy short inputs stay below RandomX’s 200 ms/hash guard‑rail.
+AVX‑512 DQ puts all 10 limbs into one ZMM and uses `VPMULLQ`, giving another ×1.7 speed‑up.
 
 ---
 
-#### 9. What about AVX‑512?
-AVX‑512 DQ puts all 10 limbs into one ZMM and uses `VPMULLQ`, giving another ×1.7 speed‑up.  But AVX‑512 often drops turbo on non‑big‑core Intel CPUs, so it lives behind an opt‑in `TIP5_ENABLE_AVX512` CMake flag.
-
----
-
-#### 10. Porting Tip8 (16‑limb state)
+### 10. Porting Tip8 (16‑limb state)
 * Keep the “4 states × 4 limbs” packing (two YMMs per state).  
 * MDS layer still register‑resident – eight `VPADDQ`/`VPERMQ` per round.  
 * Extra limbs add ~12 % work; AVX2 still hashes **≈ 900 MiB/s**.
 
 ---
-
-#### Implementation checklist
-- [ ] Integrate `simd_common.inl` and AVX2/SSE2 sources into **tip5** repo.  
-- [ ] Add `BENCHMARK_tip5` target (Google Benchmark) and publish micro‑results.  
-- [ ] Wire new SIMD routines into **RandomXT5** branch; guard with `RANDOMX_SIMD_TIP`.  
-- [ ] Extend CI matrix: `ubuntu‑latest`, `clang‑17`, `‑march=nehalem` (SSE2 only).  
-- [ ] Fuzz with `llvm‑libfuzzer` + ASan/UBSan for 48 h.  
-- [ ] Document benchmark methodology and results in `docs/perf.md`.
-
-With these changes Tip5/Tip8 meet the same optimisation bar BLAKE2b set in upstream RandomX, preserving fast‑verify while satisfying the new cryptographic requirements.
