@@ -1,6 +1,23 @@
 # RandomXT5
 ## PoW Tip5 Based Mining Algorithm Development Technical Proposal
 
+## Executive Summary
+
+This proposal outlines an algorithm to create a new Proof-of-Work (PoW) algorithm that meets 
+[specific requirements](#task-description-and-requirements)
+To meet these criteria, the proposal suggest to create a fork of [RandomX algorithm](https://github.com/tevador/RandomX) with embedded Tip5 hashing function. 
+The proposal suggest four options that vary in its security impact, optimization demands, and implementation complexity.
+
+### Integration Options at a Glance
+
+| Option | Tip5 Integration Strength | Security Impact | Requires Tip5 optimisation | Implementation effort |
+|--------|---------------------------|-----------------|----------------------------|-----------------------|
+| **[1. Create op-code](https://github.com/maxirmx/RandomXT5/blob/main/proposal.md#option-1-add-a-new-vm-opcode-for-tip5)** | **Medium** | **Slightly Increased** - Introduces a 320-bit Tip5 primitive inside the VM; final PoW digest stays Blake2b-256 ⇒ only a marginal security gain (extra diversity, but consensus hash unchanged). | **Optional** – opcode is generated rarely, a scalar fallback is acceptable. | **Medium** – add new opcode to decoder, interpreter, x86-64 & ARM JIT back-ends; update tests. |
+| **[2. Replace final digest](https://github.com/maxirmx/RandomXT5/blob/main/proposal.md#option-2-use-tip5-for-final-digest-hash256-replacement)** | **Weak** | **Slightly Increased** - Swaps Blake2b-256 for one Tip5 squeeze (320 bits). Collision bound rises from 128 → 160 bits; no change to internal state security. | **No** – called once per hash, performance impact negligible. | **Low** – one-line change in `hash_final()`, regenerate test vectors. |
+| **3. Replace `Hash512` Flavor A** | **Tight** | **Reduced** - Replaces Blake2b-512 with a **double-squeeze Tip5** (capacity = 320 bits ⇒ 160-bit collision resistance). Slightly weaker than Blake2b but still ≥ 128 bits. | **Yes** – `Hash512` is in the hot path (thousands of calls); AVX2/SSE2 & NEON kernels required. | **High** – rewrite `Hash512`, integrate 2-pass squeeze, retune VM constants, benchmark & tune. |
+| **4. Replace `Hash512` Flavor B** | **Tight** | **Unchanged** - Uses **Tip8** (rate = 8, capacity = 8 limbs ⇒ 512-bit capacity). Restores parity with Blake2b security and keeps 256-bit pre-quantum strength. | **Yes** – larger state needs brand-new SIMD code on all architectures. | **Very High** – implement Tip8 permutation, generate new constants/MDS, extensive re-validation and QA. |
+
+
 ## Task Description and Requirements
 This proposal addresses the development of a Proof-of-Work (PoW) mining algorithm designed to fulfill the following specific criteria:
 #### Req #1.	GPU/ASIC resistance
@@ -49,7 +66,7 @@ Yet experience shows that memory-hard techniques on their own provide only tempo
 ---
 
 ### RandomX 
-To overcome the limitations of pure memory- or bandwidth-hard PoW schemes, the [RandomX project](https://github.com/tevador/RandomX/blob/master/doc/design.md)  adopts a more systematic strategy. A PoW algorithm can truly overcome the advantage of GPUs and ASICs only if it binds the work to the architectural traits of commodity CPUs.
+To overcome the limitations of pure memory- or bandwidth-hard PoW schemes, the [RandomX project](https://github.com/tevador/RandomX/blob/master/doc/design.md) adopts a more systematic strategy. A PoW algorithm can truly overcome the advantage of GPUs and ASICs only if it binds the work to the architectural traits of commodity CPUs.
 
 The key insight is that CPUs handle two input streams:
 - _Data_ – the values to be processed.
@@ -152,7 +169,7 @@ If minimal use of Tip5 satisfies project objectives, this is the **recommended i
 
 ---
 
-### Option 3. Replace `Hash512` with Extended Tip5 Squeezing
+### Option 3. Replace `Hash512`
 
 RandomX uses a `Hash512` which is actually a Blake2b implementation to produce 512-bit intermediate hashes during execution.  
 This function can be replaced by an **extended Tip5 hash** using two flavours referenced as **A** and **B** below.
@@ -266,15 +283,3 @@ The proposal below follows **Tip4** and **Tip4′** instantiations described in 
 
 - **Use-case**:
   Suitable for replacing `Hash512` that generates random workload generation
-
----
-
-### Comparison of Tip5 Integration Options in RandomX
-
-| Option | Tip5 Integration Strength | Security Impact | Requires Tip5 optimisation | Implementation effort |
-|--------|---------------------------|-----------------|----------------------------|-----------------------|
-| **1. Create op-code** | **Tight** | **Slightly Increased** - Introduces a 320-bit Tip5 primitive inside the VM; final PoW digest stays Blake2b-256 ⇒ only a marginal security gain (extra diversity, but consensus hash unchanged). | **Optional** – opcode is generated rarely, a scalar fallback is acceptable. | **Medium** – add new opcode to decoder, interpreter, x86-64 & ARM JIT back-ends; update tests. |
-| **2. Replace final digest** | **Weak** | **Slightly Increased** - Swaps Blake2b-256 for one Tip5 squeeze (320 bits). Collision bound rises from 128 → 160 bits; no change to internal state security. | **No** – called once per hash, performance impact negligible. | **Low** – one-line change in `hash_final()`, regenerate test vectors. |
-| **3. Replace `Hash512` Flavor A** | **Tight** | **Reduced** - Replaces Blake2b-512 with a **double-squeeze Tip5** (capacity = 320 bits ⇒ 160-bit collision resistance). Slightly weaker than Blake2b but still ≥ 128 bits. | **Yes** – `Hash512` is in the hot path (thousands of calls); AVX2/SSE2 & NEON kernels required. | **High** – rewrite `Hash512`, integrate 2-pass squeeze, retune VM constants, benchmark & tune. |
-| **4. Replace `Hash512` Flavor B** | **Tight** | **Unchanged** - Uses **Tip8** (rate = 8, capacity = 8 limbs ⇒ 512-bit capacity). Restores parity with Blake2b security and keeps 256-bit pre-quantum strength. | **Yes** – larger state needs brand-new SIMD code on all architectures. | **Very High** – implement Tip8 permutation, generate new constants/MDS, extensive re-validation and QA. |
-
