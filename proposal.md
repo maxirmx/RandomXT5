@@ -221,7 +221,7 @@ p = 2^{64} - 2^{32} + 1
   \]
 - This 320-bit output is **not arbitrary**—it is the full output of a single permutation, aligned with the sponge's rate and security target.
 
-To match Blake2b-512’s output length, we can either add a **second permutation + squeeze ([Flavor A](#%EF%B8%8F-flavor-a-implementation))** or create **16 limbs instantiation ([Flavor B](#%EF%B8%8F-flavor-b-implementation)** 
+To match Blake2b-512’s output length, we can either add a **second permutation + squeeze ([Flavor A](#%EF%B8%8F-flavor-a-implementation))** or create **16 limbs instantiation ([Flavor B](#%EF%B8%8F-flavor-b-implementation))** 
 
 
 #### 🛠️ Flavor A Implementation
