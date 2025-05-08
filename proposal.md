@@ -163,7 +163,7 @@ If minimal use of Tip5 satisfies project objectives, this is the **recommended i
 ### Option 3. Replace `Hash512` with Extended Tip5 Squeezing
 
 RandomX uses a `Hash512` which is actually a Blake2b implementation to produce 512-bit intermediate hashes during execution.  
-This function can be replaced by an **extended Tip5 hash**, using two sequential sponge squeezes to reach the required 512-bit output.
+This function can be replaced by an **extended Tip5 hash** using two flavours referenced as **A** and **B** below.
 
 ---
 
@@ -182,12 +182,11 @@ p = 2^{64} - 2^{32} + 1
   \]
 - This 320-bit output is **not arbitrary**—it is the full output of a single permutation, aligned with the sponge's rate and security target.
 
-A single squeeze already offers a **160-bit collision resistance**, which comfortably exceeds the ~128-bit PoW requirement.  
-To match Blake2b-512’s output length, we add a **second permutation + squeeze**.
+To match Blake2b-512’s output length, we can either add a **second permutation + squeeze (Option A)** or create **16 limbs instantiation (Option B)** 
 
 ---
 
-#### 🛠️ Implementation Steps
+#### 🛠️ Flavor A Implementation
 
 1. **Keep the 10-limb Tip5 state** unchanged (`rate = 5`, `capacity = 5`)
 2. **Squeeze twice**:
@@ -204,7 +203,7 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
 
 ---
 
-#### 🔐 Security Considerations
+#### 🔐 Flavor A Security Implications
 
 - **Secure under classical assumptions**:  
   Replacing Blake2b-512 with Tip-5 (via two squeezes) provides **160-bit collision resistance**, which is sufficient for modern PoW requirements (~128-bit).  
@@ -235,32 +234,57 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
 ✅ In summary: Tip5 is cryptographically secure **for PoW use today**, but it does **not provide full Blake2b-equivalent strength** and is **not suitable for long-term quantum-resilient designs without further extensions**.
 
 ---
+#### 🛠️ Flavor B Implementation
+
+**Algorithm Instantiation Parameters**
+
+| Parameter      | Value              | Notes                                        |
+|----------------|--------------------|----------------------------------------------|
+| Field          | Goldilocks prime \( p = 2^{64} - 2^{32} + 1 \) | Same as Tip5 |
+| State size     | 16 limbs       | 1024 bits total                              |
+| Rate \( r \)   | 8 limbs        | 512 bits per squeeze                         |
+| Capacity \( c \)| 8 limbs        | 512 bits, matching Blake2b internal capacity |
+| Security       | 56-bit collision resistance | Pre-quantum safe |
+| Quantum-resistance | 128-bit collision (Grover) | Resistance equivalent to Blake2b |
+
+---
+
+**Step-by-Step Instantiation Plan**
+
+| Step | Task | Reason |
+|------|------|--------|
+| **1. Select new rate and capacity** | For 512-bit output: `rate = 8`, `capacity = 8` → 16-limb state (1024 bits total) | The `rate` controls how many limbs are output per squeeze. The `capacity` determines the security margin (collision resistance = `c/2`). |
+| **2. Recompute round constants** | Use the same method as the [Tip5 Whitepaper by Toposware](https://toposware.com/paper_tip5.pdf) (e.g. hash of indexed counters). Generate fresh constants of length equal to the new state width. | Prevents rotational or structural symmetry in larger or smaller states. |
+| **3. Regenerate the MDS matrix** | Build a new MDS matrix sized to the new state width. This matrix must be invertible and diffusion-optimal. | Guarantees full linear diffusion across limbs during each round. |
+| **4. Validate round count** | Re-assess whether the current round count (e.g. 7 or 12) is sufficient given the new capacity, increase rounds if necessary. | A reduced `capacity` or larger state may require more rounds to prevent distinguishers or attacks. |
+| **5. Update the implementation** | - Resize the internal state array<br> - Replace constant tables<br> - Adjust permutation functions and indexing logic | Reflects the new theoretical parameters in Tip8 code. |
+| **6. Regenerate test vectors** | Generate known-answer tests for: <br> - Empty input <br> - 1–64 byte inputs <br> - Long messages (e.g., 10kB) <br> Use both 256-bit and 512-bit digests. | Verifies correctness and protects against regression during refactoring. |
+| **7. Re-evaluate security** | Perform security reviews including: <br> - Differential trail analysis <br> - Algebraic attack resistance. | Changes to the state invalidate previous proof bounds; security must be re-established. |
+---
+
+---
 
 #### 📄 Specification
 
 - Adjusted specification proposal:  
-  [GitHub: RandomXT5 Option 3]((option%203%2C%20replace%20HASH512)%20specs.md), all modifications  are tagged with `Tip5 Option 3` for easy review.
+  [GitHub: RandomXT5 Option 3]((option%203%2C%20replace%20HASH512)%20specs.md), all modifications  are tagged with `Tip5 Option 3` for easy review.  
+  This specification covers both Flavor A andFlavour B changes
 
 ---
 
 #### ⚙️ Design Notes and Rationale
 
-- **Output**:
-  512-bit digest from two squeezes  
+- **Tip5 replacement of Blacke2b hash**:
+  512-bit digest either from two squeezes or from 16 limbs algorithm instantiation
 
-- **Security** :
-  Cryptographically secure **for PoW use today**, but it does **not provide full Blake2b-equivalent strength** and is **not suitable for long-term quantum-resilient designs without further extensions**
-
-- **Performance** :
-- Minimal overhead (~0.1 µs for extra permutation)  
+- **Performance**:
+  Minimal overhead (~0.1 µs for extra permutation)  
 
 - **Use-case**:
   Suitable for replacing `Hash512` that generates random workload generation
 
-This approach offers full cryptographic soundness and a smooth integration path—ideal for aligning with sponge-based primitives in a post-Blake2b context.
-
 ---
-### Comparison of Tip-5 Integration Options in RandomX
+### Comparison of Tip5 Integration Options in RandomX
 
 | Option | Description | Output Size | Collision Resistance | Security Impact | Performance Impact | Notes |
 |--------|-------------|-------------|-----------------------|------------------|--------------------|-------|
