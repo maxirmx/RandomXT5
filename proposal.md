@@ -70,9 +70,7 @@ RandomX remains the only production-grade, general-purpose PoW algorithm that de
 ---
 
 #### 2.	High Performance on CPU 
-Its high-throughput virtual machine verifies a single hash in average of 15 ms on modern, high-end CPUs is much better than the target range specified in [Req #3: CPU Optimization](#req-3cpu-optimization).
-The following figure shows the distribution of times to calculate 1 hash result using the light mode. 
-![image](https://github.com/user-attachments/assets/0130b144-f503-48d3-ba61-126c4d082d96)
+[Per RandomX documentation](https://github.com/tevador/RandomX/blob/master/doc/design.md#light-mode---verification-time) its high-throughput virtual machine verifies a single hash in average of 15 ms on modern, high-end CPUs is much better than the 200 ms target specified in [Req #3: CPU Optimization](#req-3cpu-optimization).
 
 ---
 
