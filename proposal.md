@@ -268,7 +268,7 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 
 - Adjusted specification proposal:  
   [GitHub: RandomXT5 Option 3]((option%203%2C%20replace%20HASH512)%20specs.md), all modifications  are tagged with `Tip5 Option 3` for easy review.  
-  This specification covers both Flavor A andFlavour B changes
+  This specification covers both Flavor A and Flavor B changes
 
 ---
 
