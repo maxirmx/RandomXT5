@@ -1,4 +1,4 @@
-## Tip5 op-code for RandomX Virtul Machine
+## Tip5 op-code for RandomX Virtual Machine
 
 This document specifies patches to RandomX Virtual Machine core that are required to support Tip5 op-code
 The code snippets are tested against few trivial cases to prove the concept.
