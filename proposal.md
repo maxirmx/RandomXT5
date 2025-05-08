@@ -1,3 +1,6 @@
+# RandomXT5
+## PoW Tip5 Based Mining Algorithm Development Technical Proposal
+
 ## Task Description and Requirements
 This proposal addresses the development of a Proof-of-Work (PoW) mining algorithm designed to fulfill the following specific criteria:
 #### Req #1.	GPU/ASIC resistance
@@ -11,7 +14,7 @@ Meeting mandatory requirements (1) and (2) is essential. Achieving requirement (
 
 ---
 
-## Overview of Known Technologies
+## Overview of Known Technologies for GPU/ASIC Resistance
 ### Academic Research
 The CryptoNote Whitepaper offered the first systematic treatment of ASIC-resistant mining, proposing PoW functions that hinge on memory hardness and high memory-bandwidth demands. 
 Numerous variations on this theme have since appeared in academic literature (the list below is not intended to be exhaustive).
@@ -67,12 +70,8 @@ In effect, RandomX fulfils the CryptoNote ideal of ASIC resistance while simulta
 #### 1.	Strong GPU/ASIC Resistance
 RandomX remains the only production-grade, general-purpose PoW algorithm that demonstrably thwarts both ASICs and high-end GPUs, fully satisfying [Req #1: GPU/ASIC resistance](#req-1gpuasic-resistance).
 
----
-
 #### 2.	High Performance on CPU 
 [Per RandomX documentation](https://github.com/tevador/RandomX/blob/master/doc/design.md#light-mode---verification-time) its high-throughput virtual machine verifies a single hash in average of 15 ms on modern, high-end CPUs is much better than the 200 ms target specified in [Req #3: CPU Optimization](#req-3cpu-optimization).
-
----
 
 #### 3.	Re-usability Across Blockchains
 Designed as a drop-in mining engine, RandomX ships with configuration options and guidance for integrating the VM into new blockchains without code-level changes to its core logic.
@@ -82,8 +81,6 @@ Since its release, RandomX has been adopted (or adapted) by numerous other block
 -	[Epic Cash (EPIC)](https://epiccash.com/)
   
 This proves that RandomX VM can be adapted for different blockchain solutions 
-
----
 
 #### 4.	Modular Extensibility
 RandomX’s implementation and design are highly modular, which has allowed developers to modify or extend it with relative ease. Several aspects of the project’s structure support this flexibility:
@@ -98,17 +95,11 @@ RandomX’s re-usable, modular architecture offers multiple options to meet [Req
 ## Tip5 Hash Function Integration into RandomX Algorithm (Req #2)
 
 This section presents an algorithm based on a modified RandomX specification, adapted to meet [Req #2: Use of Tip5 hashing function](#req-2use-of-tip5-hashing-function).
-
 It based on the original RandomX Specification and does **not** duplicate its definitions. 
-
----
-
-## Tip5 Integration Options
 
 There are multiple, independent approaches to integrating the Tip-5 hash function into RandomX.  
 These strategies can be implemented separately or in combination. Adjusted specification proposals are created for each integration option and are presented in separate documents.
 
----
 
 ### Option 1. Add a New VM Opcode for Tip5
 
@@ -122,6 +113,8 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip5 hash
 - The core change is described in Opcode details — Section 5.6.1:  
   [§ 5.6.1: Tip5 Instruction]((option%201,%20create%20op-code)%20specs.md#56-tip5-instruction)
 
+- Proposed implementation is described in [a separate document](tip5_opcode_implementation.md)
+
 
 #### ⚙️ Design Notes
 
@@ -132,9 +125,7 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip5 hash
 - **Performance Considerations:**  
   While some overhead is expected even with rare calls, RandomX significantly outperforms its performance target.  
   As a result, this additional cost is likely acceptable. It estimated that it will increase the average verification time from ~15 ms to ~20 ms still well below the target of 200 ms.
-
-- **Shared Optimizations:**  
-  General optimization strategies applicable to all Tip-5 integration methods are discussed in a later section.
+  Thus [Tip5 optimization](tip5_avx2_sse2_optimization.md) is optional. 
 
 ---
 
@@ -160,6 +151,7 @@ This can be seamlessly replaced with a single Tip5 sponge squeeze, yielding a **
 If minimal use of Tip5 satisfies project objectives, this is the **recommended integration**.
 
 ---
+
 ### Option 3. Replace `Hash512` with Extended Tip5 Squeezing
 
 RandomX uses a `Hash512` which is actually a Blake2b implementation to produce 512-bit intermediate hashes during execution.  
@@ -184,7 +176,6 @@ p = 2^{64} - 2^{32} + 1
 
 To match Blake2b-512’s output length, we can either add a **second permutation + squeeze (Option A)** or create **16 limbs instantiation (Option B)** 
 
----
 
 #### 🛠️ Flavor A Implementation
 
@@ -201,7 +192,6 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 
 3. **Package** the combined 64-byte result as the new digest.
 
----
 
 #### 🔐 Flavor A Security Implications
 
@@ -226,15 +216,11 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 - **Quantum caveat**:   
   Under Grover’s algorithm, the effective collision resistance of Tip-5 drops to **~80 bits**, which is below future-safe levels. A **quantum-capable attacker** could eventually compromise a Tip5-based PoW system.
 
-- **Forward-looking alternative**:  
-  For stronger or quantum-resilient hashing, a higher-capacity instantiation—such as **Tip8**, analogous to **Tip4** and **Tip4′** instantiations described in the [Two additional instantiations from the Tip5 hash function construction](https://toposware.com/paper_tip5.pdf), Robin Salen would be required to match or exceed Blake2b’s security properties.
-
----
-
-✅ In summary: Tip5 is cryptographically secure **for PoW use today**, but it does **not provide full Blake2b-equivalent strength** and is **not suitable for long-term quantum-resilient designs without further extensions**.
-
----
 #### 🛠️ Flavor B Implementation
+
+For matching or exceeding Blake2b’s security properties or quantum-resilient hashing, a higher-capacity instantiation—such as **Tip8** is required.
+The proposal below follows **Tip4** and **Tip4′** instantiations described in the [Two additional instantiations from the Tip5 hash function construction](https://toposware.com/paper_tip5.pdf) article by Robin Salen.
+
 
 **Algorithm Instantiation Parameters**
 
@@ -247,7 +233,6 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 | Security       | 56-bit collision resistance | Pre-quantum safe |
 | Quantum-resistance | 128-bit collision (Grover) | Resistance equivalent to Blake2b |
 
----
 
 **Step-by-Step Instantiation Plan**
 
@@ -260,9 +245,7 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 | **5. Update the implementation** | - Resize the internal state array<br> - Replace constant tables<br> - Adjust permutation functions and indexing logic | Reflects the new theoretical parameters in Tip8 code. |
 | **6. Regenerate test vectors** | Generate known-answer tests for: <br> - Empty input <br> - 1–64 byte inputs <br> - Long messages (e.g., 10kB) <br> Use both 256-bit and 512-bit digests. | Verifies correctness and protects against regression during refactoring. |
 | **7. Re-evaluate security** | Perform security reviews including: <br> - Differential trail analysis <br> - Algebraic attack resistance. | Changes to the state invalidate previous proof bounds; security must be re-established. |
----
 
----
 
 #### 📄 Specification
 
@@ -270,40 +253,28 @@ To match Blake2b-512’s output length, we can either add a **second permutation
   [GitHub: RandomXT5 Option 3]((option%203%2C%20replace%20HASH512)%20specs.md), all modifications  are tagged with `Tip5 Option 3` for easy review.  
   This specification covers both Flavor A and Flavor B changes
 
----
-
 #### ⚙️ Design Notes and Rationale
 
 - **Tip5 replacement of Blake2b hash**:
   512-bit digest either from two squeezes or from 16 limbs algorithm instantiation
 
 - **Performance**:
-  Minimal overhead (~0.1 µs for extra permutation)  
+  Tip5/Tip8 will sit in the same performance-critical spot that Blake2b occupies today. RandomX’s designers chose BLAKE2b because
+  highly-tuned AVX2/SSE2 code can compress the VM state in a few microseconds; a scalar fall-back would be tens of percent slower
+  and potentially double hash verification time.  Tip5/Tip8 implementation both for Flavor A and Flavor B requires implementation
+  of [Tip5 optimization](tip5_avx2_sse2_optimization.md).
 
 - **Use-case**:
   Suitable for replacing `Hash512` that generates random workload generation
 
 ---
+
 ### Comparison of Tip5 Integration Options in RandomX
 
-| Option | Description | Output Size | Collision Resistance | Security Impact | Performance Impact | Notes |
-|--------|-------------|-------------|-----------------------|------------------|--------------------|-------|
-| **1. VM Opcode** | Add `tip5` as a new RandomX VM opcode | Variable (depends on use) | Up to 160-bit | ✅ Secure if opcode is rare and deterministic | ⚠️ Moderate — more costly than primitive ops | Controlled by opcode frequency; enables VM programmability |
-| **2. Replace `Hash256`** | Swap RandomX's `Hash256` (Blake2b-256) with 1 Tip-5 squeeze | 320-bit | 160-bit | ✅ Secure — capacity-driven, ≥128-bit safe | ⚪️ Neutral to Slight — end-of-algorithm only | Increases output size by 64 bits; no runtime slowdowns |
-| **3. Replace `Hash512`** | Replace Blake2b-512 with 2 Tip-5 squeezes (permute + squeeze) | 512-bit | 160-bit | ✅ Secure — same sponge rules apply | ⚠️ Slight — extra permutation adds ~0.1 μs | Still below collision threshold; safe for PoW use |
-
-✅ = Cryptographically sound  
-⚠️ = Requires tuning or hardened implementation  
-⚪️ = Minimal or context-dependent effect
-
----
-
-### Summary
-
-- **Security**: All options preserve or improve the collision resistance compared to the original Blake2b-based design.
-- **Performance**: Option 1 (VM opcode) introduces the highest runtime cost but provides the most flexibility. Options 2 and 3 offer cryptographic upgrades with minimal impact, particularly suitable for final hashing.
-- **Use-case**:  
-  - Use **Option 1** for enhanced entropy or novel VM logic.  
-  - Use **Options 2/3** for drop-in cryptographic upgrades.
-
+| Option | Tip5 Integration Strength | Security Impact | Requires Tip5 optimisation | Implementation effort |
+|--------|---------------------------|-----------------|----------------------------|-----------------------|
+| **1. Create op-code** | **Tight** | **Slightly Increased** - Introduces a 320-bit Tip5 primitive inside the VM; final PoW digest stays Blake2b-256 ⇒ only a marginal security gain (extra diversity, but consensus hash unchanged). | **Optional** – opcode is generated rarely, a scalar fallback is acceptable. | **Medium** – add new opcode to decoder, interpreter, x86-64 & ARM JIT back-ends; update tests. |
+| **2. Replace final digest** | **Weak** | **Slightly Increased** - Swaps Blake2b-256 for one Tip5 squeeze (320 bits). Collision bound rises from 128 → 160 bits; no change to internal state security. | **No** – called once per hash, performance impact negligible. | **Low** – one-line change in `hash_final()`, regenerate test vectors. |
+| **3. Replace `Hash512` Flavor A** | **Tight** | **Reduced** - Replaces Blake2b-512 with a **double-squeeze Tip5** (capacity = 320 bits ⇒ 160-bit collision resistance). Slightly weaker than Blake2b but still ≥ 128 bits. | **Yes** – `Hash512` is in the hot path (thousands of calls); AVX2/SSE2 & NEON kernels required. | **High** – rewrite `Hash512`, integrate 2-pass squeeze, retune VM constants, benchmark & tune. |
+| **4. Replace `Hash512` Flavor B** | **Tight** | **Unchanged** - Uses **Tip8** (rate = 8, capacity = 8 limbs ⇒ 512-bit capacity). Restores parity with Blake2b security and keeps 256-bit pre-quantum strength. | **Yes** – larger state needs brand-new SIMD code on all architectures. | **Very High** – implement Tip8 permutation, generate new constants/MDS, extensive re-validation and QA. |
 
