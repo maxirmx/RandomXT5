@@ -125,6 +125,8 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip5 hash
 - The core change is described in Opcode details — Section 5.6.1:  
   [§ 5.6.1: Tip5 Instruction]((option%201,%20create%20op-code)%20specs.md#56-tip5-instruction)
 
+- Proposed implementation is described in [a separate document](tip5_opcode_implementation.md)
+
 
 #### ⚙️ Design Notes
 
