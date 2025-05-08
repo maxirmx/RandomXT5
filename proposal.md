@@ -1,6 +1,36 @@
 # RandomXT5
 ## PoW Tip5 Based Mining Algorithm Development Technical Proposal
 
+---
+
+## Table of Contents
+
+- [PoW Tip5 Based Mining Algorithm Development Technical Proposal](#pow-tip5-based-mining-algorithm-development-technical-proposal)
+- [Executive Summary](#executive-summary)
+  - [Integration Options at a Glance](#integration-options-at-a-glance)
+- [Task Description and Requirements](#task-description-and-requirements)
+- [Overview of Known Technologies for GPU/ASIC Resistance](#overview-of-known-technologies-for-gpuasic-resistance)
+  - [Academic Research](#academic-research)
+  - [Memory/Bandwidth Hardness Algorithms](#memorybandwidth-hardness-algorithms)
+  - [RandomX](#randomx)
+- [RandomX — Assessment Against Project Requirements](#randomx--assessment-against-project-requirements)
+- [Tip5 Hash Function Integration into RandomX Algorithm (Req #2)](#tip5-hash-function-integration-into-randomx-algorithm-req-2)
+  - [Option 1. Add a New VM Opcode for Tip5](#option-1-add-a-new-vm-opcode-for-tip5)
+    - [📄 Specification](#-specification)
+    - [⚙️ Design Notes](#️-design-notes)
+  - [Option 2. Use Tip5 for Final Digest (`Hash256` Replacement)](#option-2-use-tip5-for-final-digest-hash256-replacement)
+    - [📄 Specification](#-specification-1)
+    - [⚙️ Design Notes and Rationale](#️-design-notes-and-rationale)
+  - [Option 3. Replace `Hash512`](#option-3-replace-hash512)
+    - [📄 Background: Tip5 Output Characteristics](#-background-tip5-output-characteristics)
+    - [🛠️ Flavor A Implementation](#️-flavor-a-implementation)
+    - [🔐 Flavor A Security Implications](#-flavor-a-security-implications)
+    - [🛠️ Flavor B Implementation](#️-flavor-b-implementation)
+    - [📄 Specification](#-specification-2)
+    - [⚙️ Design Notes and Rationale](#️-design-notes-and-rationale-1)
+
+---
+
 ## Executive Summary
 
 This proposal outlines an algorithm to create a new Proof-of-Work (PoW) algorithm that meets 
@@ -12,10 +42,10 @@ The proposal suggest four options that vary in its security impact, optimization
 
 | Option | Tip5 Integration Strength | Security Impact | Requires Tip5 optimisation | Implementation effort |
 |--------|---------------------------|-----------------|----------------------------|-----------------------|
-| **[1. Create op-code](https://github.com/maxirmx/RandomXT5/blob/main/proposal.md#option-1-add-a-new-vm-opcode-for-tip5)** | **Medium** | **Slightly Increased** - Introduces a 320-bit Tip5 primitive inside the VM; final PoW digest stays Blake2b-256 ⇒ only a marginal security gain (extra diversity, but consensus hash unchanged). | **Optional** – opcode is generated rarely, a scalar fallback is acceptable. | **Medium** – add new opcode to decoder, interpreter, x86-64 & ARM JIT back-ends; update tests. |
-| **[2. Replace final digest](https://github.com/maxirmx/RandomXT5/blob/main/proposal.md#option-2-use-tip5-for-final-digest-hash256-replacement)** | **Weak** | **Slightly Increased** - Swaps Blake2b-256 for one Tip5 squeeze (320 bits). Collision bound rises from 128 → 160 bits; no change to internal state security. | **No** – called once per hash, performance impact negligible. | **Low** – one-line change in `hash_final()`, regenerate test vectors. |
-| **3. Replace `Hash512` Flavor A** | **Tight** | **Reduced** - Replaces Blake2b-512 with a **double-squeeze Tip5** (capacity = 320 bits ⇒ 160-bit collision resistance). Slightly weaker than Blake2b but still ≥ 128 bits. | **Yes** – `Hash512` is in the hot path (thousands of calls); AVX2/SSE2 & NEON kernels required. | **High** – rewrite `Hash512`, integrate 2-pass squeeze, retune VM constants, benchmark & tune. |
-| **4. Replace `Hash512` Flavor B** | **Tight** | **Unchanged** - Uses **Tip8** (rate = 8, capacity = 8 limbs ⇒ 512-bit capacity). Restores parity with Blake2b security and keeps 256-bit pre-quantum strength. | **Yes** – larger state needs brand-new SIMD code on all architectures. | **Very High** – implement Tip8 permutation, generate new constants/MDS, extensive re-validation and QA. |
+| **[1. Create op-code](#option-1-add-a-new-vm-opcode-for-tip5)** | **Medium** | **Slightly Increased** - Introduces a 320-bit Tip5 primitive inside the VM; final PoW digest stays Blake2b-256 ⇒ only a marginal security gain (extra diversity, but consensus hash unchanged). | **Optional** – opcode is generated rarely, a scalar fallback is acceptable. | **Medium** – add new opcode to decoder, interpreter, x86-64 & ARM JIT back-ends; update tests. |
+| **[2. Replace final digest](#option-2-use-tip5-for-final-digest-hash256-replacement)** | **Weak** | **Slightly Increased** - Swaps Blake2b-256 for one Tip5 squeeze (320 bits). Collision bound rises from 128 → 160 bits; no change to internal state security. | **No** – called once per hash, performance impact negligible. | **Low** – one-line change in `hash_final()`, regenerate test vectors. |
+| **[3. Replace `Hash512`](#option-3-replace-hash512) [Flavor A](#%EF%B8%8F-flavor-a-implementation)** | **Tight** | **Reduced** - Replaces Blake2b-512 with a **double-squeeze Tip5** (capacity = 320 bits ⇒ 160-bit collision resistance). Slightly weaker than Blake2b but still ≥ 128 bits. | **Yes** – `Hash512` is in the hot path (thousands of calls); AVX2/SSE2 & NEON kernels required. | **High** – rewrite `Hash512`, integrate 2-pass squeeze, retune VM constants, benchmark & tune. |
+| **[4. Replace `Hash512`](#option-3-replace-hash512) [Flavor B](#%EF%B8%8F-flavor-b-implementation)** | **Tight** | **Unchanged** - Uses **Tip8** (rate = 8, capacity = 8 limbs ⇒ 512-bit capacity). Restores parity with Blake2b security and keeps 256-bit pre-quantum strength. | **Yes** – larger state needs brand-new SIMD code on all architectures. | **Very High** – implement Tip8 permutation, generate new constants/MDS, extensive re-validation and QA. |
 
 
 ## Task Description and Requirements
@@ -172,7 +202,7 @@ If minimal use of Tip5 satisfies project objectives, this is the **recommended i
 ### Option 3. Replace `Hash512`
 
 RandomX uses a `Hash512` which is actually a Blake2b implementation to produce 512-bit intermediate hashes during execution.  
-This function can be replaced by an **extended Tip5 hash** using two flavours referenced as **A** and **B** below.
+This function can be replaced by an **extended Tip5 hash** using two flavours referenced as **[A](#%EF%B8%8F-flavor-a-implementation)** and **[B](#%EF%B8%8F-flavor-b-implementation)** below.
 
 ---
 
@@ -191,7 +221,7 @@ p = 2^{64} - 2^{32} + 1
   \]
 - This 320-bit output is **not arbitrary**—it is the full output of a single permutation, aligned with the sponge's rate and security target.
 
-To match Blake2b-512’s output length, we can either add a **second permutation + squeeze (Option A)** or create **16 limbs instantiation (Option B)** 
+To match Blake2b-512’s output length, we can either add a **second permutation + squeeze ([Flavor A](#%EF%B8%8F-flavor-a-implementation))** or create **16 limbs instantiation ([Flavor B](#%EF%B8%8F-flavor-b-implementation))** 
 
 
 #### 🛠️ Flavor A Implementation
