@@ -205,25 +205,35 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
 
 ---
 
-#### 🔐 Why It’s Secure
+#### 🔐 Security Considerations
 
-- **Multiple squeezes are safe**:  
-  Each permutation fully re-mixes the internal state. The **capacity section is never leaked**, preserving indifferentiability.
+- **Secure under classical assumptions**:  
+  Replacing Blake2b-512 with Tip-5 (via two squeezes) provides **160-bit collision resistance**, which is sufficient for modern PoW requirements (~128-bit).  
+  This is based on well-established bounds for sponge constructions, where the adversary’s advantage is limited by:
 
-- **Bounded adversary advantage**:  
-  For sponge constructions, the best-known distinguishing advantage is:
   \[
-  \mathcal{O}(q^2 / 2^c)
+  \mathcal{O}(q^2 / 2^c), \quad \text{with } c = 320 \Rightarrow \text{collision bound } \approx 2^{160}
   \]
-  where \( c = 320 \) in Tip-5 →  
-  \[
-  \text{Collision bound} = 2^{160}
-  \]
-  — well above the ~128-bit target.
 
-- **No gain from extra output**:  
-  Revealing more than `c` bits **does not increase collision resistance** beyond \( c/2 = 160 \) bits.  
-  A 512-bit digest still inherits this limit, which is **generally acceptable for PoW** use cases.
+- **Multiple squeezes remain safe**:  
+  Each additional squeeze is preceded by a full permutation of the internal state, ensuring the **capacity section remains hidden**. This maintains **indifferentiability from a random oracle**, as required for cryptographic soundness.
+
+- **No added strength from longer digests**:  
+  While the output may be extended to 512 bits (via two squeezes), the **security is still bounded by the capacity**, not the digest size. Revealing more than `c` bits never increases the collision resistance beyond \( c / 2 = 160 \) bits.
+
+- **Not a full replacement for Blake2b**:  
+  Tip-5 has a smaller internal state (**640 bits**) compared to Blake2b’s (**1024 bits**). This means it does **not match** Blake2b’s full 256-bit collision resistance or 512-bit preimage strength.  
+  Therefore, **Tip-5 is not a drop-in replacement** for Blake2b in high-security applications.
+
+- **Quantum caveat**:  
+  Under Grover’s algorithm, the effective collision resistance of Tip-5 drops to **~80 bits**, which is below future-safe levels. A **quantum-capable attacker** could eventually compromise a Tip5-based PoW system.
+
+- **Forward-looking alternative**:  
+  For stronger or quantum-resilient hashing, a higher-capacity instantiation—such as **Tip8**, analogous to **Tip4** and **Tip4′** instantiations described in the [Two additional instantiations from the Tip5 hash function construction](https://toposware.com/paper_tip5.pdf), Robin Salen would be required to match or exceed Blake2b’s security properties.
+
+---
+
+✅ In summary: Tip5 is cryptographically secure **for PoW use today**, but it does **not provide full Blake2b-equivalent strength** and is **not suitable for long-term quantum-resilient designs without further extensions**.
 
 ---
 
@@ -237,7 +247,9 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
 #### ⚙️ Design Rationale
 
 - **Output**: 512-bit digest from two squeezes  
-- **Security**: 160-bit collision resistance remains intact  
+- **Security**: Two variants can be implemented.
+   - ** Variant A: double squeeze ** , offering fast result and 160-bit resistance (lower than Blake2b)
+   - ** Variant B: new instantiation ** , offering 256-bit resistance (en par with Blake2b) but reuquiring generation of new MDS matrix, statistical and security  analysys with the result that can not be fully commited
 - **Performance**: Minimal overhead (~0.1 µs for extra permutation)  
 - **Use-case**: Suitable for replacing intermediate `Hash512` logic where Tip5 is desired
 
