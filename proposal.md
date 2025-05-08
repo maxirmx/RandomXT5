@@ -230,7 +230,7 @@ To match Blake2b-512’s output length, we add a **second permutation + squeeze*
 #### 📄 Specification
 
 - Adjusted specification proposal:  
-  [GitHub: RandomXT5 Option 2]((option%202%2C%20replace%20final%20digest)%20specs.md), all modifications  are tagged with `Tip5 Option 2` for easy review.
+  [GitHub: RandomXT5 Option 3]((option%203%2C%20replace%20HASH512)%20specs.md), all modifications  are tagged with `Tip5 Option 3` for easy review.
 
 ---
 
