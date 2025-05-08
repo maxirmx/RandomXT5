@@ -70,12 +70,8 @@ In effect, RandomX fulfils the CryptoNote ideal of ASIC resistance while simulta
 #### 1.	Strong GPU/ASIC Resistance
 RandomX remains the only production-grade, general-purpose PoW algorithm that demonstrably thwarts both ASICs and high-end GPUs, fully satisfying [Req #1: GPU/ASIC resistance](#req-1gpuasic-resistance).
 
----
-
 #### 2.	High Performance on CPU 
 [Per RandomX documentation](https://github.com/tevador/RandomX/blob/master/doc/design.md#light-mode---verification-time) its high-throughput virtual machine verifies a single hash in average of 15 ms on modern, high-end CPUs is much better than the 200 ms target specified in [Req #3: CPU Optimization](#req-3cpu-optimization).
-
----
 
 #### 3.	Re-usability Across Blockchains
 Designed as a drop-in mining engine, RandomX ships with configuration options and guidance for integrating the VM into new blockchains without code-level changes to its core logic.
@@ -85,8 +81,6 @@ Since its release, RandomX has been adopted (or adapted) by numerous other block
 -	[Epic Cash (EPIC)](https://epiccash.com/)
   
 This proves that RandomX VM can be adapted for different blockchain solutions 
-
----
 
 #### 4.	Modular Extensibility
 RandomX’s implementation and design are highly modular, which has allowed developers to modify or extend it with relative ease. Several aspects of the project’s structure support this flexibility:
@@ -101,17 +95,11 @@ RandomX’s re-usable, modular architecture offers multiple options to meet [Req
 ## Tip5 Hash Function Integration into RandomX Algorithm (Req #2)
 
 This section presents an algorithm based on a modified RandomX specification, adapted to meet [Req #2: Use of Tip5 hashing function](#req-2use-of-tip5-hashing-function).
-
 It based on the original RandomX Specification and does **not** duplicate its definitions. 
-
----
-
-## Tip5 Integration Options
 
 There are multiple, independent approaches to integrating the Tip-5 hash function into RandomX.  
 These strategies can be implemented separately or in combination. Adjusted specification proposals are created for each integration option and are presented in separate documents.
 
----
 
 ### Option 1. Add a New VM Opcode for Tip5
 
@@ -163,6 +151,7 @@ This can be seamlessly replaced with a single Tip5 sponge squeeze, yielding a **
 If minimal use of Tip5 satisfies project objectives, this is the **recommended integration**.
 
 ---
+
 ### Option 3. Replace `Hash512` with Extended Tip5 Squeezing
 
 RandomX uses a `Hash512` which is actually a Blake2b implementation to produce 512-bit intermediate hashes during execution.  
@@ -187,7 +176,6 @@ p = 2^{64} - 2^{32} + 1
 
 To match Blake2b-512’s output length, we can either add a **second permutation + squeeze (Option A)** or create **16 limbs instantiation (Option B)** 
 
----
 
 #### 🛠️ Flavor A Implementation
 
@@ -204,7 +192,6 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 
 3. **Package** the combined 64-byte result as the new digest.
 
----
 
 #### 🔐 Flavor A Security Implications
 
@@ -229,7 +216,6 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 - **Quantum caveat**:   
   Under Grover’s algorithm, the effective collision resistance of Tip-5 drops to **~80 bits**, which is below future-safe levels. A **quantum-capable attacker** could eventually compromise a Tip5-based PoW system.
 
----
 #### 🛠️ Flavor B Implementation
 
 For matching or exceeding Blake2b’s security properties or quantum-resilient hashing, a higher-capacity instantiation—such as **Tip8** is required.
@@ -247,7 +233,6 @@ The proposal below follows **Tip4** and **Tip4′** instantiations described in 
 | Security       | 56-bit collision resistance | Pre-quantum safe |
 | Quantum-resistance | 128-bit collision (Grover) | Resistance equivalent to Blake2b |
 
----
 
 **Step-by-Step Instantiation Plan**
 
@@ -261,15 +246,12 @@ The proposal below follows **Tip4** and **Tip4′** instantiations described in 
 | **6. Regenerate test vectors** | Generate known-answer tests for: <br> - Empty input <br> - 1–64 byte inputs <br> - Long messages (e.g., 10kB) <br> Use both 256-bit and 512-bit digests. | Verifies correctness and protects against regression during refactoring. |
 | **7. Re-evaluate security** | Perform security reviews including: <br> - Differential trail analysis <br> - Algebraic attack resistance. | Changes to the state invalidate previous proof bounds; security must be re-established. |
 
----
 
 #### 📄 Specification
 
 - Adjusted specification proposal:  
   [GitHub: RandomXT5 Option 3]((option%203%2C%20replace%20HASH512)%20specs.md), all modifications  are tagged with `Tip5 Option 3` for easy review.  
   This specification covers both Flavor A and Flavor B changes
-
----
 
 #### ⚙️ Design Notes and Rationale
 
