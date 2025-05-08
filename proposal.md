@@ -260,7 +260,6 @@ To match Blake2b-512’s output length, we can either add a **second permutation
 | **5. Update the implementation** | - Resize the internal state array<br> - Replace constant tables<br> - Adjust permutation functions and indexing logic | Reflects the new theoretical parameters in Tip8 code. |
 | **6. Regenerate test vectors** | Generate known-answer tests for: <br> - Empty input <br> - 1–64 byte inputs <br> - Long messages (e.g., 10kB) <br> Use both 256-bit and 512-bit digests. | Verifies correctness and protects against regression during refactoring. |
 | **7. Re-evaluate security** | Perform security reviews including: <br> - Differential trail analysis <br> - Algebraic attack resistance. | Changes to the state invalidate previous proof bounds; security must be re-established. |
----
 
 ---
 
@@ -278,12 +277,20 @@ To match Blake2b-512’s output length, we can either add a **second permutation
   512-bit digest either from two squeezes or from 16 limbs algorithm instantiation
 
 - **Performance**:
-  Minimal overhead (~0.1 µs for extra permutation)  
+  Tip5/Tip8 will sit in the same performance-critical spot that Blake2b occupies today. RandomX’s designers chose BLAKE2b because
+  highly-tuned AVX2/SSE2 code can compress the VM state in a few microseconds; a scalar fall-back would be tens of percent slower
+  and potentially double hash verification time.  Tip5/Tip8 implementation both for Flavour A and FlavourB needs to exploit the CPU’s
+  AVX2/SSE2 units just as Blake2b does.
 
 - **Use-case**:
   Suitable for replacing `Hash512` that generates random workload generation
 
 ---
+
+### Tip5/Tip8 optimzation for AVX2/SSE2
+
+---
+
 ### Comparison of Tip5 Integration Options in RandomX
 
 | Option | Description | Output Size | Collision Resistance | Security Impact | Performance Impact | Notes |
