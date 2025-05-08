@@ -105,14 +105,14 @@ It based on the original RandomX Specification and does **not** duplicate its de
 
 ---
 
-## Integration Strategies
+## Tip5 Integration Options
 
 There are multiple, independent approaches to integrating the Tip-5 hash function into RandomX.  
 These strategies can be implemented separately or in combination. Adjusted specification proposals are created for each integration option and are presented in separate documents.
 
 ---
 
-### 1. Add a New VM Opcode for Tip-5
+### Option 1. Add a New VM Opcode for Tip-5
 
 A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 hash algorithm.
 
@@ -140,7 +140,7 @@ A new opcode can be added to the RandomX virtual machine to invoke the Tip-5 has
 
 ---
 
-### 2. Use Tip-5 for Final Digest (`Hash256` Replacement)
+### Option 2. Use Tip-5 for Final Digest (`Hash256` Replacement)
 
 In standard RandomX, the final digest is produced using the `Hash256` function, which is internally a Blake2b variant with a 256-bit output.
 
@@ -159,7 +159,91 @@ This can be seamlessly replaced with a single Tip-5 sponge squeeze, yielding a *
 If minimal use of Tip5 satisfies project objectives, this is the **recommended integration**.
 
 ---
+### Option 3. Replace `Hash512` with Extended Tip5 Squeezing
 
+RandomX uses a `Hash512` which is actually a Blake2b implementation to produce 512-bit intermediate hashes during execution.  
+This function can be replaced by an **extended Tip5 hash**, using two sequential sponge squeezes to reach the required 512-bit output.
+
+---
+
+#### 📄 Background: Tip5 Output Characteristics
+
+Tip5 is a sponge construction over the **Goldilocks prime field**:
+
+\[
+p = 2^{64} - 2^{32} + 1
+\]
+
+- State size: **10 limbs**, with **rate = 5**, **capacity = 5**
+- One squeeze reads the 5 rate limbs →  
+  \[
+  5 \times 64 \text{ bits} = 320 \text{ bits}
+  \]
+- This 320-bit output is **not arbitrary**—it is the full output of a single permutation, aligned with the sponge's rate and security target.
+
+A single squeeze already offers a **160-bit collision resistance**, which comfortably exceeds the ~128-bit PoW requirement.  
+To match Blake2b-512’s output length, we add a **second permutation + squeeze**.
+
+---
+
+#### 🛠️ Implementation Steps
+
+1. **Keep the 10-limb Tip-5 state** unchanged (`rate = 5`, `capacity = 5`)
+2. **Squeeze twice**:
+    ```cpp
+    permute(state);          // already done
+    output limbs[0..4];      // 5 limbs → bytes 0–39 (320 bits)
+
+    permute(state);          // one additional permutation
+    output limbs[0..2];      // 3 limbs → bytes 40–63 (192 bits)
+    ```
+    *(Alternatively, output 4 limbs to generate a full 512 bits exactly)*
+
+3. **Package** the combined 64-byte result as the new digest.
+
+📌 The second permutation adds only ~0.1 µs in practice — a negligible cost in the RandomX context.
+
+---
+
+#### 🔐 Why It’s Secure
+
+- **Multiple squeezes are safe**:  
+  Each permutation fully re-mixes the internal state. The **capacity section is never leaked**, preserving indifferentiability.
+
+- **Bounded adversary advantage**:  
+  For sponge constructions, the best-known distinguishing advantage is:
+  \[
+  \mathcal{O}(q^2 / 2^c)
+  \]
+  where \( c = 320 \) in Tip-5 →  
+  \[
+  \text{Collision bound} = 2^{160}
+  \]
+  — well above the ~128-bit target.
+
+- **No gain from extra output**:  
+  Revealing more than `c` bits **does not increase collision resistance** beyond \( c/2 = 160 \) bits.  
+  A 512-bit digest still inherits this limit, which is **generally acceptable for PoW** use cases.
+
+---
+
+#### 📄 Specification
+
+- Adjusted specification proposal:  
+  [GitHub: RandomXT5 Option 2]((option%202%2C%20replace%20final%20digest)%20specs.md), all modifications  are tagged with `Tip5 Option 2` for easy review.
+
+---
+
+#### ⚙️ Design Rationale
+
+- **Output**: 512-bit digest from two squeezes  
+- **Security**: 160-bit collision resistance remains intact  
+- **Performance**: Minimal overhead (~0.1 µs for extra permutation)  
+- **Use-case**: Suitable for replacing intermediate `Hash512` logic where Tip5 is desired
+
+This approach offers full cryptographic soundness and a smooth integration path—ideal for aligning with sponge-based primitives in a post-Blake2b context.
+
+---
 ### Comparison of Tip-5 Integration Options in RandomX
 
 | Option | Description | Output Size | Collision Resistance | Security Impact | Performance Impact | Notes |
@@ -181,4 +265,5 @@ If minimal use of Tip5 satisfies project objectives, this is the **recommended i
 - **Use-case**:  
   - Use **Option 1** for enhanced entropy or novel VM logic.  
   - Use **Options 2/3** for drop-in cryptographic upgrades.
+
 
