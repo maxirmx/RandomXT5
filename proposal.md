@@ -1,6 +1,36 @@
 # RandomXT5
 ## PoW Tip5 Based Mining Algorithm Development Technical Proposal
 
+---
+
+## Table of Contents
+
+- [PoW Tip5 Based Mining Algorithm Development Technical Proposal](#pow-tip5-based-mining-algorithm-development-technical-proposal)
+- [Executive Summary](#executive-summary)
+  - [Integration Options at a Glance](#integration-options-at-a-glance)
+- [Task Description and Requirements](#task-description-and-requirements)
+- [Overview of Known Technologies for GPU/ASIC Resistance](#overview-of-known-technologies-for-gpuasic-resistance)
+  - [Academic Research](#academic-research)
+  - [Memory/Bandwidth Hardness Algorithms](#memorybandwidth-hardness-algorithms)
+  - [RandomX](#randomx)
+- [RandomX — Assessment Against Project Requirements](#randomx--assessment-against-project-requirements)
+- [Tip5 Hash Function Integration into RandomX Algorithm (Req #2)](#tip5-hash-function-integration-into-randomx-algorithm-req-2)
+  - [Option 1. Add a New VM Opcode for Tip5](#option-1-add-a-new-vm-opcode-for-tip5)
+    - [📄 Specification](#-specification)
+    - [⚙️ Design Notes](#️-design-notes)
+  - [Option 2. Use Tip5 for Final Digest (`Hash256` Replacement)](#option-2-use-tip5-for-final-digest-hash256-replacement)
+    - [📄 Specification](#-specification-1)
+    - [⚙️ Design Notes and Rationale](#️-design-notes-and-rationale)
+  - [Option 3. Replace `Hash512`](#option-3-replace-hash512)
+    - [📄 Background: Tip5 Output Characteristics](#-background-tip5-output-characteristics)
+    - [🛠️ Flavor A Implementation](#️-flavor-a-implementation)
+    - [🔐 Flavor A Security Implications](#-flavor-a-security-implications)
+    - [🛠️ Flavor B Implementation](#️-flavor-b-implementation)
+    - [📄 Specification](#-specification-2)
+    - [⚙️ Design Notes and Rationale](#️-design-notes-and-rationale-1)
+
+---
+
 ## Executive Summary
 
 This proposal outlines an algorithm to create a new Proof-of-Work (PoW) algorithm that meets 
