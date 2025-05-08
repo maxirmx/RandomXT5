@@ -20,7 +20,7 @@ RandomX is a proof of work (PoW) algorithm which was designed to close the gap b
 **Hash256** refers to the [Blake2b](https://blake2.net/blake2_20130129.pdf) hashing function with a 256-bit output size.
 
 **_[Tip5 Option 3 change]_**
-**Hash512** refer to the Tip5 hashing function 512-bit output size, that is implemented either in Flavor A or in Flavor B.
+**Hash512** refer to the Tip5 hashing function 512-bit output size, that is implemented either in [Flavor A](proposal.md#%EF%B8%8F-flavor-a-implementation) or in [Flavor B](proposal.md#%EF%B8%8F-flavor-b-implementation).
 **_[End of Tip5 Option 3 change]_**
 
 **Floating point format** refers to the [IEEE-754 double precision floating point format](https://en.wikipedia.org/wiki/Double-precision_floating-point_format) with a sign bit, 11-bit exponent and 52-bit fraction.
